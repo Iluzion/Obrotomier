@@ -1,0 +1,1246 @@
+
+Obrotomierz.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000005cc  00000000  00000000  00000094  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         00000008  00800060  000005cc  00000660  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          00000005  00800068  00800068  00000668  2**0
+                  ALLOC
+  3 .comment      00000030  00000000  00000000  00000668  2**0
+                  CONTENTS, READONLY
+  4 .debug_aranges 000001a8  00000000  00000000  00000698  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_info   0000190c  00000000  00000000  00000840  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_abbrev 000007d4  00000000  00000000  0000214c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_line   00000a3e  00000000  00000000  00002920  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_frame  000003dc  00000000  00000000  00003360  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_str    000005c7  00000000  00000000  0000373c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_loc    00000eb4  00000000  00000000  00003d03  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_ranges 00000148  00000000  00000000  00004bb7  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+volatile uint8_t	IC_OVF_Counter		= 0;
+
+uint16_t Time_To_RPM(void)	{
+	
+	uint32_t Period	= 0;
+	if (IC_OVF_Counter)	{
+   0:	0c 94 2a 00 	jmp	0x54	; 0x54 <__ctors_end>
+   4:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+		Period		= Timer_Value_Stop + 0xFFFF * IC_OVF_Counter - Timer_Value_Start;	//	Wylicz okres uwzgledniajac przepelnienia licznika
+   8:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+   c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  10:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  14:	0c 94 bc 02 	jmp	0x578	; 0x578 <__vector_5>
+  18:	0c 94 8d 02 	jmp	0x51a	; 0x51a <__vector_6>
+  1c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  20:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  24:	0c 94 a4 02 	jmp	0x548	; 0x548 <__vector_9>
+  28:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+	} 	else	{
+		Period		= Timer_Value_Stop - Timer_Value_Start;	//	Wylicz czas od ostatniego impulsu
+  2c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  30:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  34:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  38:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  3c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  40:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+	}
+	IC_Measure_req		= false;
+  44:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+	Timer_Value_Start	= Timer_Value_Stop;					//	Zaktualizuj stan timera do kolejnego pomiaru
+  48:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  4c:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+  50:	0c 94 47 00 	jmp	0x8e	; 0x8e <__bad_interrupt>
+
+00000054 <__ctors_end>:
+  54:	11 24       	eor	r1, r1
+	double RPM			= 120.0 / Period;					//	Przelicz okres pomiedzy zaplonem w us na obr/60 us
+  56:	1f be       	out	0x3f, r1	; 63
+  58:	cf e5       	ldi	r28, 0x5F	; 95
+  5a:	d8 e0       	ldi	r29, 0x08	; 8
+  5c:	de bf       	out	0x3e, r29	; 62
+  5e:	cd bf       	out	0x3d, r28	; 61
+
+00000060 <__do_copy_data>:
+  60:	10 e0       	ldi	r17, 0x00	; 0
+  62:	a0 e6       	ldi	r26, 0x60	; 96
+  64:	b0 e0       	ldi	r27, 0x00	; 0
+  66:	ec ec       	ldi	r30, 0xCC	; 204
+  68:	f5 e0       	ldi	r31, 0x05	; 5
+	RPM					= RPM * 1000000.0;					//	Przelicz obr/60 us na obr/min
+  6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
+  6c:	05 90       	lpm	r0, Z+
+  6e:	0d 92       	st	X+, r0
+  70:	a8 36       	cpi	r26, 0x68	; 104
+  72:	b1 07       	cpc	r27, r17
+  74:	d9 f7       	brne	.-10     	; 0x6c <__do_copy_data+0xc>
+
+00000076 <__do_clear_bss>:
+	uint16_t result		= (int) RPM;
+  76:	20 e0       	ldi	r18, 0x00	; 0
+  78:	a8 e6       	ldi	r26, 0x68	; 104
+	return result;
+}
+  7a:	b0 e0       	ldi	r27, 0x00	; 0
+  7c:	01 c0       	rjmp	.+2      	; 0x80 <.do_clear_bss_start>
+
+0000007e <.do_clear_bss_loop>:
+  7e:	1d 92       	st	X+, r1
+
+00000080 <.do_clear_bss_start>:
+  80:	ad 36       	cpi	r26, 0x6D	; 109
+  82:	b2 07       	cpc	r27, r18
+  84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
+  86:	0e 94 c7 02 	call	0x58e	; 0x58e <main>
+  8a:	0c 94 e4 02 	jmp	0x5c8	; 0x5c8 <_exit>
+
+0000008e <__bad_interrupt>:
+  8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000092 <T_Sensor_Init>:
+#include "Hardware.h"
+#include "temperature.h"
+#include "ds18s20.h"
+
+void T_Sensor_Init(void)
+{
+  92:	cf 93       	push	r28
+  94:	df 93       	push	r29
+  96:	cd b7       	in	r28, 0x3d	; 61
+  98:	de b7       	in	r29, 0x3e	; 62
+  9a:	65 97       	sbiw	r28, 0x15	; 21
+  9c:	0f b6       	in	r0, 0x3f	; 63
+  9e:	f8 94       	cli
+  a0:	de bf       	out	0x3e, r29	; 62
+  a2:	0f be       	out	0x3f, r0	; 63
+  a4:	cd bf       	out	0x3d, r28	; 61
+	TSDS18x20 DS18x20;
+	TSDS18x20 *pDS18x20 = &DS18x20;
+	if (DS18x20_Init(pDS18x20,&T_Sen_Port,T_Sensor))	{
+  a6:	42 e0       	ldi	r20, 0x02	; 2
+  a8:	62 e3       	ldi	r22, 0x32	; 50
+  aa:	70 e0       	ldi	r23, 0x00	; 0
+  ac:	ce 01       	movw	r24, r28
+  ae:	01 96       	adiw	r24, 0x01	; 1
+  b0:	0e 94 93 01 	call	0x326	; 0x326 <DS18x20_Init>
+  b4:	81 11       	cpse	r24, r1
+  b6:	09 c0       	rjmp	.+18     	; 0xca <T_Sensor_Init+0x38>
+		// B£¥d
+	}	else	{
+	// Set DS18B20 resolution to 9 bits.
+	DS18x20_SetResolution(pDS18x20,CONF_RES_9b);
+  b8:	6f e1       	ldi	r22, 0x1F	; 31
+  ba:	ce 01       	movw	r24, r28
+  bc:	01 96       	adiw	r24, 0x01	; 1
+  be:	0e 94 d4 01 	call	0x3a8	; 0x3a8 <DS18x20_SetResolution>
+	DS18x20_WriteScratchpad(pDS18x20);
+  c2:	ce 01       	movw	r24, r28
+  c4:	01 96       	adiw	r24, 0x01	; 1
+  c6:	0e 94 da 01 	call	0x3b4	; 0x3b4 <DS18x20_WriteScratchpad>
+	}
+}
+  ca:	65 96       	adiw	r28, 0x15	; 21
+  cc:	0f b6       	in	r0, 0x3f	; 63
+  ce:	f8 94       	cli
+  d0:	de bf       	out	0x3e, r29	; 62
+  d2:	0f be       	out	0x3f, r0	; 63
+  d4:	cd bf       	out	0x3d, r28	; 61
+  d6:	df 91       	pop	r29
+  d8:	cf 91       	pop	r28
+  da:	08 95       	ret
+
+000000dc <OWReset>:
+	{
+		case CONF_RES_10b:
+			return sign*(abs(Temperature)/4) * 0.25;
+			break;
+		case CONF_RES_11b:
+			return sign*(abs(Temperature)/2) * 0.125;
+  dc:	fc 01       	movw	r30, r24
+  de:	a0 81       	ld	r26, Z
+  e0:	b1 81       	ldd	r27, Z+1	; 0x01
+  e2:	4e 91       	ld	r20, -X
+  e4:	21 e0       	ldi	r18, 0x01	; 1
+  e6:	30 e0       	ldi	r19, 0x00	; 0
+  e8:	c9 01       	movw	r24, r18
+  ea:	02 80       	ldd	r0, Z+2	; 0x02
+		case CONF_RES_12b:
+			return Temperature * 0.0625;
+  ec:	02 c0       	rjmp	.+4      	; 0xf2 <OWReset+0x16>
+  ee:	88 0f       	add	r24, r24
+  f0:	99 1f       	adc	r25, r25
+  f2:	0a 94       	dec	r0
+  f4:	e2 f7       	brpl	.-8      	; 0xee <OWReset+0x12>
+  f6:	84 2b       	or	r24, r20
+  f8:	8c 93       	st	X, r24
+  fa:	8f e7       	ldi	r24, 0x7F	; 127
+  fc:	97 e0       	ldi	r25, 0x07	; 7
+  fe:	01 97       	sbiw	r24, 0x01	; 1
+ 100:	f1 f7       	brne	.-4      	; 0xfe <OWReset+0x22>
+ 102:	00 c0       	rjmp	.+0      	; 0x104 <OWReset+0x28>
+ 104:	00 00       	nop
+			break;
+		case CONF_RES_9b:
+			return sign*(abs(Temperature)/8) * 0.5;
+ 106:	a0 81       	ld	r26, Z
+ 108:	b1 81       	ldd	r27, Z+1	; 0x01
+ 10a:	4e 91       	ld	r20, -X
+ 10c:	c9 01       	movw	r24, r18
+ 10e:	02 80       	ldd	r0, Z+2	; 0x02
+ 110:	02 c0       	rjmp	.+4      	; 0x116 <OWReset+0x3a>
+ 112:	88 0f       	add	r24, r24
+ 114:	99 1f       	adc	r25, r25
+ 116:	0a 94       	dec	r0
+ 118:	e2 f7       	brpl	.-8      	; 0x112 <OWReset+0x36>
+ 11a:	80 95       	com	r24
+ 11c:	84 23       	and	r24, r20
+ 11e:	8c 93       	st	X, r24
+ 120:	8f e3       	ldi	r24, 0x3F	; 63
+ 122:	91 e0       	ldi	r25, 0x01	; 1
+ 124:	01 97       	sbiw	r24, 0x01	; 1
+ 126:	f1 f7       	brne	.-4      	; 0x124 <OWReset+0x48>
+ 128:	00 c0       	rjmp	.+0      	; 0x12a <OWReset+0x4e>
+ 12a:	00 00       	nop
+ 12c:	a0 81       	ld	r26, Z
+ 12e:	b1 81       	ldd	r27, Z+1	; 0x01
+ 130:	12 97       	sbiw	r26, 0x02	; 2
+ 132:	4c 91       	ld	r20, X
+ 134:	c9 01       	movw	r24, r18
+ 136:	02 80       	ldd	r0, Z+2	; 0x02
+ 138:	02 c0       	rjmp	.+4      	; 0x13e <OWReset+0x62>
+ 13a:	88 0f       	add	r24, r24
+ 13c:	99 1f       	adc	r25, r25
+ 13e:	0a 94       	dec	r0
+ 140:	e2 f7       	brpl	.-8      	; 0x13a <OWReset+0x5e>
+ 142:	84 23       	and	r24, r20
+ 144:	ef e3       	ldi	r30, 0x3F	; 63
+ 146:	f6 e0       	ldi	r31, 0x06	; 6
+ 148:	31 97       	sbiw	r30, 0x01	; 1
+ 14a:	f1 f7       	brne	.-4      	; 0x148 <OWReset+0x6c>
+ 14c:	00 c0       	rjmp	.+0      	; 0x14e <OWReset+0x72>
+ 14e:	00 00       	nop
+ 150:	08 95       	ret
+
+00000152 <OWWriteBit>:
+ 152:	fc 01       	movw	r30, r24
+ 154:	a0 81       	ld	r26, Z
+ 156:	b1 81       	ldd	r27, Z+1	; 0x01
+			break;
+		default:
+			return 0.0;
+ 158:	4e 91       	ld	r20, -X
+ 15a:	21 e0       	ldi	r18, 0x01	; 1
+ 15c:	30 e0       	ldi	r19, 0x00	; 0
+	}
+}
+ 15e:	c9 01       	movw	r24, r18
+}
+
+/* Send a bit over 1-Wire interface. */
+void OWWriteBit(TSDS18x20 *pDS18x20, uint8_t bit)
+{
+	*(pDS18x20->DS18x20_PORT-1) |= _BV(pDS18x20->DS18x20_PIN);
+ 160:	02 80       	ldd	r0, Z+2	; 0x02
+ 162:	02 c0       	rjmp	.+4      	; 0x168 <OWWriteBit+0x16>
+ 164:	88 0f       	add	r24, r24
+ 166:	99 1f       	adc	r25, r25
+ 168:	0a 94       	dec	r0
+ 16a:	e2 f7       	brpl	.-8      	; 0x164 <OWWriteBit+0x12>
+ 16c:	84 2b       	or	r24, r20
+ 16e:	8c 93       	st	X, r24
+	
+	if (bit)
+ 170:	66 23       	and	r22, r22
+ 172:	a1 f0       	breq	.+40     	; 0x19c <OWWriteBit+0x4a>
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+ 174:	80 e5       	ldi	r24, 0x50	; 80
+ 176:	8a 95       	dec	r24
+ 178:	f1 f7       	brne	.-4      	; 0x176 <OWWriteBit+0x24>
+	{
+		//Wite 1
+		_delay_us(15);
+		*(pDS18x20->DS18x20_PORT-1) &= ~(_BV(pDS18x20->DS18x20_PIN));
+ 17a:	a0 81       	ld	r26, Z
+ 17c:	b1 81       	ldd	r27, Z+1	; 0x01
+ 17e:	4e 91       	ld	r20, -X
+ 180:	c9 01       	movw	r24, r18
+ 182:	02 80       	ldd	r0, Z+2	; 0x02
+ 184:	02 c0       	rjmp	.+4      	; 0x18a <OWWriteBit+0x38>
+ 186:	88 0f       	add	r24, r24
+ 188:	99 1f       	adc	r25, r25
+ 18a:	0a 94       	dec	r0
+ 18c:	e2 f7       	brpl	.-8      	; 0x186 <OWWriteBit+0x34>
+ 18e:	80 95       	com	r24
+ 190:	84 23       	and	r24, r20
+ 192:	8c 93       	st	X, r24
+ 194:	90 ef       	ldi	r25, 0xF0	; 240
+ 196:	9a 95       	dec	r25
+ 198:	f1 f7       	brne	.-4      	; 0x196 <OWWriteBit+0x44>
+ 19a:	08 95       	ret
+ 19c:	8f ee       	ldi	r24, 0xEF	; 239
+ 19e:	90 e0       	ldi	r25, 0x00	; 0
+ 1a0:	01 97       	sbiw	r24, 0x01	; 1
+ 1a2:	f1 f7       	brne	.-4      	; 0x1a0 <OWWriteBit+0x4e>
+ 1a4:	00 c0       	rjmp	.+0      	; 0x1a6 <OWWriteBit+0x54>
+ 1a6:	00 00       	nop
+	}
+	else
+	{
+		//Write 0
+		_delay_us(60);
+		*(pDS18x20->DS18x20_PORT-1) &= ~(_BV(pDS18x20->DS18x20_PIN));
+ 1a8:	a0 81       	ld	r26, Z
+ 1aa:	b1 81       	ldd	r27, Z+1	; 0x01
+ 1ac:	4e 91       	ld	r20, -X
+ 1ae:	21 e0       	ldi	r18, 0x01	; 1
+ 1b0:	30 e0       	ldi	r19, 0x00	; 0
+ 1b2:	c9 01       	movw	r24, r18
+ 1b4:	02 80       	ldd	r0, Z+2	; 0x02
+ 1b6:	02 c0       	rjmp	.+4      	; 0x1bc <OWWriteBit+0x6a>
+ 1b8:	88 0f       	add	r24, r24
+ 1ba:	99 1f       	adc	r25, r25
+ 1bc:	0a 94       	dec	r0
+ 1be:	e2 f7       	brpl	.-8      	; 0x1b8 <OWWriteBit+0x66>
+ 1c0:	80 95       	com	r24
+ 1c2:	84 23       	and	r24, r20
+ 1c4:	8c 93       	st	X, r24
+ 1c6:	08 95       	ret
+
+000001c8 <OWReadBit>:
+	return;
+}
+
+/* Read a bit from the 1-Wire interface. */
+uint8_t OWReadBit(TSDS18x20 *pDS18x20)
+{
+ 1c8:	fc 01       	movw	r30, r24
+	uint8_t result=0;
+
+	*(pDS18x20->DS18x20_PORT-1) |= _BV(pDS18x20->DS18x20_PIN);
+ 1ca:	a0 81       	ld	r26, Z
+ 1cc:	b1 81       	ldd	r27, Z+1	; 0x01
+ 1ce:	4e 91       	ld	r20, -X
+ 1d0:	21 e0       	ldi	r18, 0x01	; 1
+ 1d2:	30 e0       	ldi	r19, 0x00	; 0
+ 1d4:	c9 01       	movw	r24, r18
+ 1d6:	02 80       	ldd	r0, Z+2	; 0x02
+ 1d8:	02 c0       	rjmp	.+4      	; 0x1de <OWReadBit+0x16>
+ 1da:	88 0f       	add	r24, r24
+ 1dc:	99 1f       	adc	r25, r25
+ 1de:	0a 94       	dec	r0
+ 1e0:	e2 f7       	brpl	.-8      	; 0x1da <OWReadBit+0x12>
+ 1e2:	84 2b       	or	r24, r20
+ 1e4:	8c 93       	st	X, r24
+ 1e6:	85 e1       	ldi	r24, 0x15	; 21
+ 1e8:	8a 95       	dec	r24
+ 1ea:	f1 f7       	brne	.-4      	; 0x1e8 <OWReadBit+0x20>
+ 1ec:	00 00       	nop
+	_delay_us(4);
+	
+	*(pDS18x20->DS18x20_PORT-1) &= ~(_BV(pDS18x20->DS18x20_PIN));
+ 1ee:	a0 81       	ld	r26, Z
+ 1f0:	b1 81       	ldd	r27, Z+1	; 0x01
+ 1f2:	4e 91       	ld	r20, -X
+ 1f4:	c9 01       	movw	r24, r18
+ 1f6:	02 80       	ldd	r0, Z+2	; 0x02
+ 1f8:	02 c0       	rjmp	.+4      	; 0x1fe <OWReadBit+0x36>
+ 1fa:	88 0f       	add	r24, r24
+ 1fc:	99 1f       	adc	r25, r25
+ 1fe:	0a 94       	dec	r0
+ 200:	e2 f7       	brpl	.-8      	; 0x1fa <OWReadBit+0x32>
+ 202:	80 95       	com	r24
+ 204:	84 23       	and	r24, r20
+ 206:	8c 93       	st	X, r24
+ 208:	8a e2       	ldi	r24, 0x2A	; 42
+ 20a:	8a 95       	dec	r24
+ 20c:	f1 f7       	brne	.-4      	; 0x20a <OWReadBit+0x42>
+ 20e:	00 c0       	rjmp	.+0      	; 0x210 <OWReadBit+0x48>
+	_delay_us(8);
+	
+	if ((*(pDS18x20->DS18x20_PORT-2) & (_BV(pDS18x20->DS18x20_PIN)))) 
+ 210:	a0 81       	ld	r26, Z
+ 212:	b1 81       	ldd	r27, Z+1	; 0x01
+ 214:	12 97       	sbiw	r26, 0x02	; 2
+ 216:	8c 91       	ld	r24, X
+ 218:	90 e0       	ldi	r25, 0x00	; 0
+ 21a:	02 80       	ldd	r0, Z+2	; 0x02
+ 21c:	02 c0       	rjmp	.+4      	; 0x222 <OWReadBit+0x5a>
+ 21e:	95 95       	asr	r25
+ 220:	87 95       	ror	r24
+ 222:	0a 94       	dec	r0
+ 224:	e2 f7       	brpl	.-8      	; 0x21e <OWReadBit+0x56>
+ 226:	81 70       	andi	r24, 0x01	; 1
+ 228:	ef eb       	ldi	r30, 0xBF	; 191
+ 22a:	f0 e0       	ldi	r31, 0x00	; 0
+ 22c:	31 97       	sbiw	r30, 0x01	; 1
+ 22e:	f1 f7       	brne	.-4      	; 0x22c <OWReadBit+0x64>
+ 230:	00 c0       	rjmp	.+0      	; 0x232 <OWReadBit+0x6a>
+ 232:	00 00       	nop
+		result=1;
+	
+	_delay_us(48);
+	
+	return result;
+}
+ 234:	08 95       	ret
+
+00000236 <OWWriteByte>:
+
+/* Send a byte over 1-Wire interface starting with most significant bit. */
+void OWWriteByte(TSDS18x20 *pDS18x20, uint8_t value)
+{
+ 236:	ef 92       	push	r14
+ 238:	ff 92       	push	r15
+ 23a:	0f 93       	push	r16
+ 23c:	1f 93       	push	r17
+ 23e:	cf 93       	push	r28
+ 240:	df 93       	push	r29
+ 242:	8c 01       	movw	r16, r24
+ 244:	e6 2e       	mov	r14, r22
+ 246:	c8 e0       	ldi	r28, 0x08	; 8
+ 248:	d0 e0       	ldi	r29, 0x00	; 0
+	uint8_t mask = 0x01;
+ 24a:	ff 24       	eor	r15, r15
+ 24c:	f3 94       	inc	r15
+	
+	while (mask)
+	{
+		OWWriteBit(pDS18x20,value & mask);
+ 24e:	6f 2d       	mov	r22, r15
+ 250:	6e 21       	and	r22, r14
+ 252:	c8 01       	movw	r24, r16
+ 254:	0e 94 a9 00 	call	0x152	; 0x152 <OWWriteBit>
+		mask <<= 1;
+ 258:	ff 0c       	add	r15, r15
+ 25a:	21 97       	sbiw	r28, 0x01	; 1
+/* Send a byte over 1-Wire interface starting with most significant bit. */
+void OWWriteByte(TSDS18x20 *pDS18x20, uint8_t value)
+{
+	uint8_t mask = 0x01;
+	
+	while (mask)
+ 25c:	20 97       	sbiw	r28, 0x00	; 0
+ 25e:	b9 f7       	brne	.-18     	; 0x24e <OWWriteByte+0x18>
+	{
+		OWWriteBit(pDS18x20,value & mask);
+		mask <<= 1;
+	}
+}
+ 260:	df 91       	pop	r29
+ 262:	cf 91       	pop	r28
+ 264:	1f 91       	pop	r17
+ 266:	0f 91       	pop	r16
+ 268:	ff 90       	pop	r15
+ 26a:	ef 90       	pop	r14
+ 26c:	08 95       	ret
+
+0000026e <OWReadByte>:
+
+/* Read a byte form the 1-Wire interface. */
+uint8_t OWReadByte(TSDS18x20 *pDS18x20)
+{
+ 26e:	ef 92       	push	r14
+ 270:	ff 92       	push	r15
+ 272:	0f 93       	push	r16
+ 274:	1f 93       	push	r17
+ 276:	cf 93       	push	r28
+ 278:	df 93       	push	r29
+ 27a:	8c 01       	movw	r16, r24
+ 27c:	c8 e0       	ldi	r28, 0x08	; 8
+ 27e:	d0 e0       	ldi	r29, 0x00	; 0
+	uint8_t data = 0x00;
+	uint8_t mask = 0x01;
+ 280:	ff 24       	eor	r15, r15
+ 282:	f3 94       	inc	r15
+}
+
+/* Read a byte form the 1-Wire interface. */
+uint8_t OWReadByte(TSDS18x20 *pDS18x20)
+{
+	uint8_t data = 0x00;
+ 284:	e1 2c       	mov	r14, r1
+	uint8_t mask = 0x01;
+	
+	while(mask)
+	{
+		if (OWReadBit(pDS18x20))
+ 286:	c8 01       	movw	r24, r16
+ 288:	0e 94 e4 00 	call	0x1c8	; 0x1c8 <OWReadBit>
+ 28c:	81 11       	cpse	r24, r1
+			data |= mask;
+ 28e:	ef 28       	or	r14, r15
+		mask <<= 1;
+ 290:	ff 0c       	add	r15, r15
+ 292:	21 97       	sbiw	r28, 0x01	; 1
+uint8_t OWReadByte(TSDS18x20 *pDS18x20)
+{
+	uint8_t data = 0x00;
+	uint8_t mask = 0x01;
+	
+	while(mask)
+ 294:	20 97       	sbiw	r28, 0x00	; 0
+ 296:	b9 f7       	brne	.-18     	; 0x286 <OWReadByte+0x18>
+			data |= mask;
+		mask <<= 1;
+	}
+	
+	return data;
+}
+ 298:	8e 2d       	mov	r24, r14
+ 29a:	df 91       	pop	r29
+ 29c:	cf 91       	pop	r28
+ 29e:	1f 91       	pop	r17
+ 2a0:	0f 91       	pop	r16
+ 2a2:	ff 90       	pop	r15
+ 2a4:	ef 90       	pop	r14
+ 2a6:	08 95       	ret
+
+000002a8 <OWCheckCRC>:
+uint8_t OWCheckCRC(uint8_t *data, uint8_t length)
+{
+	uint8_t i;
+	uint8_t CRCvalue=0;
+	
+	for(i=0;i<length;i++)
+ 2a8:	66 23       	and	r22, r22
+ 2aa:	91 f0       	breq	.+36     	; 0x2d0 <OWCheckCRC+0x28>
+ 2ac:	28 2f       	mov	r18, r24
+ 2ae:	e8 2f       	mov	r30, r24
+ 2b0:	f9 2f       	mov	r31, r25
+
+/* Calculates CRC value based on the example in Avr-libc reference manual. */
+uint8_t OWCheckCRC(uint8_t *data, uint8_t length)
+{
+	uint8_t i;
+	uint8_t CRCvalue=0;
+ 2b2:	80 e0       	ldi	r24, 0x00	; 0
+	
+	for(i=0;i<length;i++)
+		CRCvalue=_crc_ibutton_update(CRCvalue,*(data+i));
+ 2b4:	91 91       	ld	r25, Z+
+
+static __inline__ uint8_t
+_crc_ibutton_update(uint8_t __crc, uint8_t __data)
+{
+	uint8_t __i, __pattern;
+	__asm__ __volatile__ (
+ 2b6:	89 27       	eor	r24, r25
+ 2b8:	98 e0       	ldi	r25, 0x08	; 8
+ 2ba:	3c e8       	ldi	r19, 0x8C	; 140
+ 2bc:	86 95       	lsr	r24
+ 2be:	08 f4       	brcc	.+2      	; 0x2c2 <OWCheckCRC+0x1a>
+ 2c0:	83 27       	eor	r24, r19
+ 2c2:	9a 95       	dec	r25
+ 2c4:	d9 f7       	brne	.-10     	; 0x2bc <OWCheckCRC+0x14>
+ 2c6:	9e 2f       	mov	r25, r30
+ 2c8:	92 1b       	sub	r25, r18
+uint8_t OWCheckCRC(uint8_t *data, uint8_t length)
+{
+	uint8_t i;
+	uint8_t CRCvalue=0;
+	
+	for(i=0;i<length;i++)
+ 2ca:	96 17       	cp	r25, r22
+ 2cc:	98 f3       	brcs	.-26     	; 0x2b4 <OWCheckCRC+0xc>
+ 2ce:	08 95       	ret
+
+/* Calculates CRC value based on the example in Avr-libc reference manual. */
+uint8_t OWCheckCRC(uint8_t *data, uint8_t length)
+{
+	uint8_t i;
+	uint8_t CRCvalue=0;
+ 2d0:	80 e0       	ldi	r24, 0x00	; 0
+	
+	for(i=0;i<length;i++)
+		CRCvalue=_crc_ibutton_update(CRCvalue,*(data+i));
+
+	return CRCvalue;
+}
+ 2d2:	08 95       	ret
+
+000002d4 <DS18x20_ReadROM>:
+}
+
+
+/* Reads DS18S20 64-bit ROM code without using the Search ROM procedure. */
+uint8_t DS18x20_ReadROM(TSDS18x20 *pDS18x20)
+{
+ 2d4:	ef 92       	push	r14
+ 2d6:	ff 92       	push	r15
+ 2d8:	0f 93       	push	r16
+ 2da:	1f 93       	push	r17
+ 2dc:	cf 93       	push	r28
+ 2de:	df 93       	push	r29
+ 2e0:	8c 01       	movw	r16, r24
+	uint8_t i;
+		
+	OWWriteByte(pDS18x20,READ_ROM);
+ 2e2:	63 e3       	ldi	r22, 0x33	; 51
+ 2e4:	0e 94 1b 01 	call	0x236	; 0x236 <OWWriteByte>
+ 2e8:	e8 01       	movw	r28, r16
+ 2ea:	23 96       	adiw	r28, 0x03	; 3
+ 2ec:	78 01       	movw	r14, r16
+ 2ee:	8b e0       	ldi	r24, 0x0B	; 11
+ 2f0:	e8 0e       	add	r14, r24
+ 2f2:	f1 1c       	adc	r15, r1
+
+	for(i=0;i<8;i++)
+		pDS18x20->serialNumber[i]=OWReadByte(pDS18x20);
+ 2f4:	c8 01       	movw	r24, r16
+ 2f6:	0e 94 37 01 	call	0x26e	; 0x26e <OWReadByte>
+ 2fa:	89 93       	st	Y+, r24
+{
+	uint8_t i;
+		
+	OWWriteByte(pDS18x20,READ_ROM);
+
+	for(i=0;i<8;i++)
+ 2fc:	ce 15       	cp	r28, r14
+ 2fe:	df 05       	cpc	r29, r15
+ 300:	c9 f7       	brne	.-14     	; 0x2f4 <DS18x20_ReadROM+0x20>
+		pDS18x20->serialNumber[i]=OWReadByte(pDS18x20);
+	
+	if (OWCheckCRC(pDS18x20->serialNumber,7)==pDS18x20->serialNumber[7])
+ 302:	67 e0       	ldi	r22, 0x07	; 7
+ 304:	c8 01       	movw	r24, r16
+ 306:	03 96       	adiw	r24, 0x03	; 3
+ 308:	0e 94 54 01 	call	0x2a8	; 0x2a8 <OWCheckCRC>
+ 30c:	91 e0       	ldi	r25, 0x01	; 1
+ 30e:	f8 01       	movw	r30, r16
+ 310:	22 85       	ldd	r18, Z+10	; 0x0a
+ 312:	82 13       	cpse	r24, r18
+ 314:	90 e0       	ldi	r25, 0x00	; 0
+		return 1;
+	else
+		return 0;
+}
+ 316:	89 2f       	mov	r24, r25
+ 318:	df 91       	pop	r29
+ 31a:	cf 91       	pop	r28
+ 31c:	1f 91       	pop	r17
+ 31e:	0f 91       	pop	r16
+ 320:	ff 90       	pop	r15
+ 322:	ef 90       	pop	r14
+ 324:	08 95       	ret
+
+00000326 <DS18x20_Init>:
+	return CRCvalue;
+}
+
+/* Init function for DS18S20. */
+uint8_t DS18x20_Init(TSDS18x20 *pDS18x20,volatile uint8_t *DS18x20_PORT,uint8_t DS18x20_PIN)
+{
+ 326:	cf 93       	push	r28
+ 328:	df 93       	push	r29
+ 32a:	ec 01       	movw	r28, r24
+	//Init ports/pins to which DS18S20 is attached.
+	pDS18x20->DS18x20_PORT = DS18x20_PORT;
+ 32c:	79 83       	std	Y+1, r23	; 0x01
+ 32e:	68 83       	st	Y, r22
+	pDS18x20->DS18x20_PIN = DS18x20_PIN;
+ 330:	4a 83       	std	Y+2, r20	; 0x02
+	
+	//Set DS18S20 PIN as input one and PORT bit to 0
+	*(pDS18x20->DS18x20_PORT) &= ~(_BV(pDS18x20->DS18x20_PIN));
+ 332:	fb 01       	movw	r30, r22
+ 334:	20 81       	ld	r18, Z
+ 336:	81 e0       	ldi	r24, 0x01	; 1
+ 338:	90 e0       	ldi	r25, 0x00	; 0
+ 33a:	fc 01       	movw	r30, r24
+ 33c:	02 c0       	rjmp	.+4      	; 0x342 <DS18x20_Init+0x1c>
+ 33e:	ee 0f       	add	r30, r30
+ 340:	ff 1f       	adc	r31, r31
+ 342:	4a 95       	dec	r20
+ 344:	e2 f7       	brpl	.-8      	; 0x33e <DS18x20_Init+0x18>
+ 346:	af 01       	movw	r20, r30
+ 348:	40 95       	com	r20
+ 34a:	42 23       	and	r20, r18
+ 34c:	fb 01       	movw	r30, r22
+ 34e:	40 83       	st	Z, r20
+	*(pDS18x20->DS18x20_PORT-1) &= ~(_BV(pDS18x20->DS18x20_PIN));
+ 350:	e8 81       	ld	r30, Y
+ 352:	f9 81       	ldd	r31, Y+1	; 0x01
+ 354:	22 91       	ld	r18, -Z
+ 356:	0a 80       	ldd	r0, Y+2	; 0x02
+ 358:	02 c0       	rjmp	.+4      	; 0x35e <DS18x20_Init+0x38>
+ 35a:	88 0f       	add	r24, r24
+ 35c:	99 1f       	adc	r25, r25
+ 35e:	0a 94       	dec	r0
+ 360:	e2 f7       	brpl	.-8      	; 0x35a <DS18x20_Init+0x34>
+ 362:	80 95       	com	r24
+ 364:	82 23       	and	r24, r18
+ 366:	80 83       	st	Z, r24
+	
+	if (OWReset(pDS18x20))
+ 368:	ce 01       	movw	r24, r28
+ 36a:	0e 94 6e 00 	call	0xdc	; 0xdc <OWReset>
+ 36e:	81 11       	cpse	r24, r1
+ 370:	13 c0       	rjmp	.+38     	; 0x398 <DS18x20_Init+0x72>
+		return 1;
+	
+	//Check DS18x20 sensor type by reading the family code from the ROM code
+	if (!DS18x20_ReadROM(pDS18x20))
+ 372:	ce 01       	movw	r24, r28
+ 374:	0e 94 6a 01 	call	0x2d4	; 0x2d4 <DS18x20_ReadROM>
+ 378:	88 23       	and	r24, r24
+ 37a:	81 f0       	breq	.+32     	; 0x39c <DS18x20_Init+0x76>
+		return 1;
+	
+	switch(pDS18x20->serialNumber[0])
+ 37c:	8b 81       	ldd	r24, Y+3	; 0x03
+ 37e:	80 31       	cpi	r24, 0x10	; 16
+ 380:	41 f0       	breq	.+16     	; 0x392 <DS18x20_Init+0x6c>
+ 382:	88 32       	cpi	r24, 0x28	; 40
+ 384:	69 f4       	brne	.+26     	; 0x3a0 <DS18x20_Init+0x7a>
+	{
+		case 0x28:
+			{
+				pDS18x20->SensorModel=DS18B20Sensor;	
+ 386:	81 e0       	ldi	r24, 0x01	; 1
+ 388:	8c 8b       	std	Y+20, r24	; 0x14
+				// Set the resolution to its default value
+				pDS18x20->scratchpad[4]=CONF_RES_12b;
+ 38a:	8f e7       	ldi	r24, 0x7F	; 127
+ 38c:	8f 87       	std	Y+15, r24	; 0x0f
+			break;
+		default:
+			return 1;	
+	}
+	
+	return 0;
+ 38e:	80 e0       	ldi	r24, 0x00	; 0
+			{
+				pDS18x20->SensorModel=DS18B20Sensor;	
+				// Set the resolution to its default value
+				pDS18x20->scratchpad[4]=CONF_RES_12b;
+			}
+			break;
+ 390:	08 c0       	rjmp	.+16     	; 0x3a2 <DS18x20_Init+0x7c>
+		case 0x10:
+			pDS18x20->SensorModel=DS18S20Sensor;
+ 392:	1c 8a       	std	Y+20, r1	; 0x14
+			break;
+		default:
+			return 1;	
+	}
+	
+	return 0;
+ 394:	80 e0       	ldi	r24, 0x00	; 0
+				pDS18x20->scratchpad[4]=CONF_RES_12b;
+			}
+			break;
+		case 0x10:
+			pDS18x20->SensorModel=DS18S20Sensor;
+			break;
+ 396:	05 c0       	rjmp	.+10     	; 0x3a2 <DS18x20_Init+0x7c>
+	//Set DS18S20 PIN as input one and PORT bit to 0
+	*(pDS18x20->DS18x20_PORT) &= ~(_BV(pDS18x20->DS18x20_PIN));
+	*(pDS18x20->DS18x20_PORT-1) &= ~(_BV(pDS18x20->DS18x20_PIN));
+	
+	if (OWReset(pDS18x20))
+		return 1;
+ 398:	81 e0       	ldi	r24, 0x01	; 1
+ 39a:	03 c0       	rjmp	.+6      	; 0x3a2 <DS18x20_Init+0x7c>
+	
+	//Check DS18x20 sensor type by reading the family code from the ROM code
+	if (!DS18x20_ReadROM(pDS18x20))
+		return 1;
+ 39c:	81 e0       	ldi	r24, 0x01	; 1
+ 39e:	01 c0       	rjmp	.+2      	; 0x3a2 <DS18x20_Init+0x7c>
+			break;
+		case 0x10:
+			pDS18x20->SensorModel=DS18S20Sensor;
+			break;
+		default:
+			return 1;	
+ 3a0:	81 e0       	ldi	r24, 0x01	; 1
+	}
+	
+	return 0;
+}
+ 3a2:	df 91       	pop	r29
+ 3a4:	cf 91       	pop	r28
+ 3a6:	08 95       	ret
+
+000003a8 <DS18x20_SetResolution>:
+}
+
+/* Defines the resolution of the sensor. Doesn't have any effect on DS18S20. */
+void DS18x20_SetResolution(TSDS18x20 *pDS18x20, uint8_t CONF_REG)
+{
+	if (pDS18x20->SensorModel==DS18B20Sensor)
+ 3a8:	fc 01       	movw	r30, r24
+ 3aa:	24 89       	ldd	r18, Z+20	; 0x14
+ 3ac:	21 30       	cpi	r18, 0x01	; 1
+ 3ae:	09 f4       	brne	.+2      	; 0x3b2 <DS18x20_SetResolution+0xa>
+		pDS18x20->scratchpad[4]=CONF_REG;	
+ 3b0:	67 87       	std	Z+15, r22	; 0x0f
+ 3b2:	08 95       	ret
+
+000003b4 <DS18x20_WriteScratchpad>:
+	return;
+}
+
+/* Writes 2 bytes of data to the SA18S20 scratchpad (TH and TL registers).*/
+void DS18x20_WriteScratchpad(TSDS18x20 *pDS18x20)
+{
+ 3b4:	cf 93       	push	r28
+ 3b6:	df 93       	push	r29
+ 3b8:	ec 01       	movw	r28, r24
+	OWReset(pDS18x20);
+ 3ba:	0e 94 6e 00 	call	0xdc	; 0xdc <OWReset>
+	OWWriteByte(pDS18x20,SKIP_ROM);
+ 3be:	6c ec       	ldi	r22, 0xCC	; 204
+ 3c0:	ce 01       	movw	r24, r28
+ 3c2:	0e 94 1b 01 	call	0x236	; 0x236 <OWWriteByte>
+	OWWriteByte(pDS18x20,WRITE_SCRATCHPAD);
+ 3c6:	6e e4       	ldi	r22, 0x4E	; 78
+ 3c8:	ce 01       	movw	r24, r28
+ 3ca:	0e 94 1b 01 	call	0x236	; 0x236 <OWWriteByte>
+	
+	OWWriteByte(pDS18x20,pDS18x20->scratchpad[2]);
+ 3ce:	6d 85       	ldd	r22, Y+13	; 0x0d
+ 3d0:	ce 01       	movw	r24, r28
+ 3d2:	0e 94 1b 01 	call	0x236	; 0x236 <OWWriteByte>
+	OWWriteByte(pDS18x20,pDS18x20->scratchpad[3]);
+ 3d6:	6e 85       	ldd	r22, Y+14	; 0x0e
+ 3d8:	ce 01       	movw	r24, r28
+ 3da:	0e 94 1b 01 	call	0x236	; 0x236 <OWWriteByte>
+	if (pDS18x20->SensorModel == DS18B20Sensor)
+ 3de:	8c 89       	ldd	r24, Y+20	; 0x14
+ 3e0:	81 30       	cpi	r24, 0x01	; 1
+ 3e2:	21 f4       	brne	.+8      	; 0x3ec <DS18x20_WriteScratchpad+0x38>
+		OWWriteByte(pDS18x20,pDS18x20->scratchpad[4]);
+ 3e4:	6f 85       	ldd	r22, Y+15	; 0x0f
+ 3e6:	ce 01       	movw	r24, r28
+ 3e8:	0e 94 1b 01 	call	0x236	; 0x236 <OWWriteByte>
+
+	return;
+}
+ 3ec:	df 91       	pop	r29
+ 3ee:	cf 91       	pop	r28
+ 3f0:	08 95       	ret
+
+000003f2 <_LCD_OutNibble>:
+// Funkcja wystawiaj¹ca pó³bajt na magistralê danych
+//
+//-------------------------------------------------------------------------------------------------
+void _LCD_OutNibble(unsigned char nibbleToWrite)
+{
+if(nibbleToWrite & 0x01)
+ 3f2:	80 ff       	sbrs	r24, 0
+ 3f4:	02 c0       	rjmp	.+4      	; 0x3fa <_LCD_OutNibble+0x8>
+	LCD_DB4_PORT |= LCD_DB4;
+ 3f6:	c3 9a       	sbi	0x18, 3	; 24
+ 3f8:	01 c0       	rjmp	.+2      	; 0x3fc <_LCD_OutNibble+0xa>
+else
+	LCD_DB4_PORT  &= ~LCD_DB4;
+ 3fa:	c3 98       	cbi	0x18, 3	; 24
+
+if(nibbleToWrite & 0x02)
+ 3fc:	81 ff       	sbrs	r24, 1
+ 3fe:	02 c0       	rjmp	.+4      	; 0x404 <_LCD_OutNibble+0x12>
+	LCD_DB5_PORT |= LCD_DB5;
+ 400:	c4 9a       	sbi	0x18, 4	; 24
+ 402:	01 c0       	rjmp	.+2      	; 0x406 <_LCD_OutNibble+0x14>
+else
+	LCD_DB5_PORT  &= ~LCD_DB5;
+ 404:	c4 98       	cbi	0x18, 4	; 24
+
+if(nibbleToWrite & 0x04)
+ 406:	82 ff       	sbrs	r24, 2
+ 408:	02 c0       	rjmp	.+4      	; 0x40e <_LCD_OutNibble+0x1c>
+	LCD_DB6_PORT |= LCD_DB6;
+ 40a:	c5 9a       	sbi	0x18, 5	; 24
+ 40c:	01 c0       	rjmp	.+2      	; 0x410 <_LCD_OutNibble+0x1e>
+else
+	LCD_DB6_PORT  &= ~LCD_DB6;
+ 40e:	c5 98       	cbi	0x18, 5	; 24
+
+if(nibbleToWrite & 0x08)
+ 410:	83 ff       	sbrs	r24, 3
+ 412:	02 c0       	rjmp	.+4      	; 0x418 <_LCD_OutNibble+0x26>
+	LCD_DB7_PORT |= LCD_DB7;
+ 414:	c6 9a       	sbi	0x18, 6	; 24
+ 416:	08 95       	ret
+else
+	LCD_DB7_PORT  &= ~LCD_DB7;
+ 418:	c6 98       	cbi	0x18, 6	; 24
+ 41a:	08 95       	ret
+
+0000041c <_LCD_Write>:
+//
+// Funkcja zapisu bajtu do wyœwietacza (bez rozró¿nienia instrukcja/dane).
+//
+//-------------------------------------------------------------------------------------------------
+void _LCD_Write(unsigned char dataToWrite)
+{
+ 41c:	cf 93       	push	r28
+ 41e:	c8 2f       	mov	r28, r24
+LCD_E_PORT |= LCD_E;
+ 420:	c1 9a       	sbi	0x18, 1	; 24
+_LCD_OutNibble(dataToWrite >> 4);
+ 422:	82 95       	swap	r24
+ 424:	8f 70       	andi	r24, 0x0F	; 15
+ 426:	0e 94 f9 01 	call	0x3f2	; 0x3f2 <_LCD_OutNibble>
+LCD_E_PORT &= ~LCD_E;
+ 42a:	c1 98       	cbi	0x18, 1	; 24
+LCD_E_PORT |= LCD_E;
+ 42c:	c1 9a       	sbi	0x18, 1	; 24
+_LCD_OutNibble(dataToWrite);
+ 42e:	8c 2f       	mov	r24, r28
+ 430:	0e 94 f9 01 	call	0x3f2	; 0x3f2 <_LCD_OutNibble>
+LCD_E_PORT &= ~LCD_E;
+ 434:	c1 98       	cbi	0x18, 1	; 24
+ 436:	80 e1       	ldi	r24, 0x10	; 16
+ 438:	8a 95       	dec	r24
+ 43a:	f1 f7       	brne	.-4      	; 0x438 <_LCD_Write+0x1c>
+ 43c:	00 c0       	rjmp	.+0      	; 0x43e <_LCD_Write+0x22>
+_delay_us(50);
+}
+ 43e:	cf 91       	pop	r28
+ 440:	08 95       	ret
+
+00000442 <LCD_WriteCommand>:
+// Funkcja zapisu rozkazu do wyœwietlacza
+//
+//-------------------------------------------------------------------------------------------------
+void LCD_WriteCommand(unsigned char commandToWrite)
+{
+LCD_RS_PORT &= ~LCD_RS;
+ 442:	98 b3       	in	r25, 0x18	; 24
+ 444:	98 bb       	out	0x18, r25	; 24
+_LCD_Write(commandToWrite);
+ 446:	0e 94 0e 02 	call	0x41c	; 0x41c <_LCD_Write>
+ 44a:	08 95       	ret
+
+0000044c <LCD_WriteData>:
+// Funkcja zapisu danych do pamiêci wyœwietlacza
+//
+//-------------------------------------------------------------------------------------------------
+void LCD_WriteData(unsigned char dataToWrite)
+{
+LCD_RS_PORT |= LCD_RS;
+ 44c:	98 b3       	in	r25, 0x18	; 24
+ 44e:	98 bb       	out	0x18, r25	; 24
+_LCD_Write(dataToWrite);
+ 450:	0e 94 0e 02 	call	0x41c	; 0x41c <_LCD_Write>
+ 454:	08 95       	ret
+
+00000456 <LCD_WriteText>:
+//
+// Funkcja wyœwietlenia napisu na wyswietlaczu.
+//
+//-------------------------------------------------------------------------------------------------
+void LCD_WriteText(char * text)
+{
+ 456:	cf 93       	push	r28
+ 458:	df 93       	push	r29
+ 45a:	ec 01       	movw	r28, r24
+while(*text)
+ 45c:	88 81       	ld	r24, Y
+ 45e:	88 23       	and	r24, r24
+ 460:	31 f0       	breq	.+12     	; 0x46e <LCD_WriteText+0x18>
+ 462:	21 96       	adiw	r28, 0x01	; 1
+  LCD_WriteData(*text++);
+ 464:	0e 94 26 02 	call	0x44c	; 0x44c <LCD_WriteData>
+// Funkcja wyœwietlenia napisu na wyswietlaczu.
+//
+//-------------------------------------------------------------------------------------------------
+void LCD_WriteText(char * text)
+{
+while(*text)
+ 468:	89 91       	ld	r24, Y+
+ 46a:	81 11       	cpse	r24, r1
+ 46c:	fb cf       	rjmp	.-10     	; 0x464 <LCD_WriteText+0xe>
+  LCD_WriteData(*text++);
+}
+ 46e:	df 91       	pop	r29
+ 470:	cf 91       	pop	r28
+ 472:	08 95       	ret
+
+00000474 <LCD_GoTo>:
+// Funkcja ustawienia wspó³rzêdnych ekranowych
+//
+//-------------------------------------------------------------------------------------------------
+void LCD_GoTo(unsigned char x, unsigned char y)
+{
+LCD_WriteCommand(HD44780_DDRAM_SET | (x + (0x40 * y)));
+ 474:	90 e4       	ldi	r25, 0x40	; 64
+ 476:	69 9f       	mul	r22, r25
+ 478:	80 0d       	add	r24, r0
+ 47a:	11 24       	eor	r1, r1
+ 47c:	80 68       	ori	r24, 0x80	; 128
+ 47e:	0e 94 21 02 	call	0x442	; 0x442 <LCD_WriteCommand>
+ 482:	08 95       	ret
+
+00000484 <LCD_Clear>:
+// Funkcja czyszczenia ekranu wyœwietlacza.
+//
+//-------------------------------------------------------------------------------------------------
+void LCD_Clear(void)
+{
+LCD_WriteCommand(HD44780_CLEAR);
+ 484:	81 e0       	ldi	r24, 0x01	; 1
+ 486:	0e 94 21 02 	call	0x442	; 0x442 <LCD_WriteCommand>
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+ 48a:	83 ef       	ldi	r24, 0xF3	; 243
+ 48c:	91 e0       	ldi	r25, 0x01	; 1
+ 48e:	01 97       	sbiw	r24, 0x01	; 1
+ 490:	f1 f7       	brne	.-4      	; 0x48e <LCD_Clear+0xa>
+ 492:	00 c0       	rjmp	.+0      	; 0x494 <LCD_Clear+0x10>
+ 494:	00 00       	nop
+ 496:	08 95       	ret
+
+00000498 <LCD_Initalize>:
+//
+// Procedura inicjalizacji kontrolera HD44780.
+//
+//-------------------------------------------------------------------------------------------------
+void LCD_Initalize(void)
+{
+ 498:	cf 93       	push	r28
+unsigned char i;
+LCD_DB4_DIR |= LCD_DB4; // Konfiguracja kierunku pracy wyprowadzeñ
+ 49a:	bb 9a       	sbi	0x17, 3	; 23
+LCD_DB5_DIR |= LCD_DB5; //
+ 49c:	bc 9a       	sbi	0x17, 4	; 23
+LCD_DB6_DIR |= LCD_DB6; //
+ 49e:	bd 9a       	sbi	0x17, 5	; 23
+LCD_DB7_DIR |= LCD_DB7; //
+ 4a0:	be 9a       	sbi	0x17, 6	; 23
+LCD_E_DIR 	|= LCD_E;   //
+ 4a2:	b9 9a       	sbi	0x17, 1	; 23
+LCD_RS_DIR 	|= LCD_RS;  //
+ 4a4:	87 b3       	in	r24, 0x17	; 23
+ 4a6:	87 bb       	out	0x17, r24	; 23
+ 4a8:	85 ea       	ldi	r24, 0xA5	; 165
+ 4aa:	9e e0       	ldi	r25, 0x0E	; 14
+ 4ac:	01 97       	sbiw	r24, 0x01	; 1
+ 4ae:	f1 f7       	brne	.-4      	; 0x4ac <LCD_Initalize+0x14>
+ 4b0:	00 c0       	rjmp	.+0      	; 0x4b2 <LCD_Initalize+0x1a>
+ 4b2:	00 00       	nop
+_delay_ms(15); // oczekiwanie na ustalibizowanie siê napiecia zasilajacego
+LCD_RS_PORT &= ~LCD_RS; // wyzerowanie linii RS
+ 4b4:	88 b3       	in	r24, 0x18	; 24
+ 4b6:	88 bb       	out	0x18, r24	; 24
+LCD_E_PORT &= ~LCD_E;  // wyzerowanie linii E
+ 4b8:	c1 98       	cbi	0x18, 1	; 24
+ 4ba:	c3 e0       	ldi	r28, 0x03	; 3
+
+for(i = 0; i < 3; i++) // trzykrotne powtórzenie bloku instrukcji
+  {
+  LCD_E_PORT |= LCD_E; //  E = 1
+ 4bc:	c1 9a       	sbi	0x18, 1	; 24
+  _LCD_OutNibble(0x03); // tryb 8-bitowy
+ 4be:	83 e0       	ldi	r24, 0x03	; 3
+ 4c0:	0e 94 f9 01 	call	0x3f2	; 0x3f2 <_LCD_OutNibble>
+  LCD_E_PORT &= ~LCD_E; // E = 0
+ 4c4:	c1 98       	cbi	0x18, 1	; 24
+ 4c6:	81 ee       	ldi	r24, 0xE1	; 225
+ 4c8:	94 e0       	ldi	r25, 0x04	; 4
+ 4ca:	01 97       	sbiw	r24, 0x01	; 1
+ 4cc:	f1 f7       	brne	.-4      	; 0x4ca <LCD_Initalize+0x32>
+ 4ce:	00 c0       	rjmp	.+0      	; 0x4d0 <LCD_Initalize+0x38>
+ 4d0:	00 00       	nop
+ 4d2:	c1 50       	subi	r28, 0x01	; 1
+LCD_RS_DIR 	|= LCD_RS;  //
+_delay_ms(15); // oczekiwanie na ustalibizowanie siê napiecia zasilajacego
+LCD_RS_PORT &= ~LCD_RS; // wyzerowanie linii RS
+LCD_E_PORT &= ~LCD_E;  // wyzerowanie linii E
+
+for(i = 0; i < 3; i++) // trzykrotne powtórzenie bloku instrukcji
+ 4d4:	99 f7       	brne	.-26     	; 0x4bc <LCD_Initalize+0x24>
+  _LCD_OutNibble(0x03); // tryb 8-bitowy
+  LCD_E_PORT &= ~LCD_E; // E = 0
+  _delay_ms(5); // czekaj 5ms
+  }
+
+LCD_E_PORT |= LCD_E; // E = 1
+ 4d6:	c1 9a       	sbi	0x18, 1	; 24
+_LCD_OutNibble(0x02); // tryb 4-bitowy
+ 4d8:	82 e0       	ldi	r24, 0x02	; 2
+ 4da:	0e 94 f9 01 	call	0x3f2	; 0x3f2 <_LCD_OutNibble>
+LCD_E_PORT &= ~LCD_E; // E = 0
+ 4de:	c1 98       	cbi	0x18, 1	; 24
+ 4e0:	89 ef       	ldi	r24, 0xF9	; 249
+ 4e2:	90 e0       	ldi	r25, 0x00	; 0
+ 4e4:	01 97       	sbiw	r24, 0x01	; 1
+ 4e6:	f1 f7       	brne	.-4      	; 0x4e4 <LCD_Initalize+0x4c>
+ 4e8:	00 c0       	rjmp	.+0      	; 0x4ea <LCD_Initalize+0x52>
+ 4ea:	00 00       	nop
+
+_delay_ms(1); // czekaj 1ms 
+LCD_WriteCommand(HD44780_FUNCTION_SET | HD44780_FONT5x7 | HD44780_TWO_LINE | HD44780_4_BIT); // interfejs 4-bity, 2-linie, znak 5x7
+ 4ec:	88 e2       	ldi	r24, 0x28	; 40
+ 4ee:	0e 94 21 02 	call	0x442	; 0x442 <LCD_WriteCommand>
+LCD_WriteCommand(HD44780_DISPLAY_ONOFF | HD44780_DISPLAY_OFF); // wy³¹czenie wyswietlacza
+ 4f2:	88 e0       	ldi	r24, 0x08	; 8
+ 4f4:	0e 94 21 02 	call	0x442	; 0x442 <LCD_WriteCommand>
+LCD_WriteCommand(HD44780_CLEAR); // czyszczenie zawartosæi pamieci DDRAM
+ 4f8:	81 e0       	ldi	r24, 0x01	; 1
+ 4fa:	0e 94 21 02 	call	0x442	; 0x442 <LCD_WriteCommand>
+ 4fe:	83 ef       	ldi	r24, 0xF3	; 243
+ 500:	91 e0       	ldi	r25, 0x01	; 1
+ 502:	01 97       	sbiw	r24, 0x01	; 1
+ 504:	f1 f7       	brne	.-4      	; 0x502 <LCD_Initalize+0x6a>
+ 506:	00 c0       	rjmp	.+0      	; 0x508 <LCD_Initalize+0x70>
+ 508:	00 00       	nop
+_delay_ms(2);
+LCD_WriteCommand(HD44780_ENTRY_MODE | HD44780_EM_SHIFT_CURSOR | HD44780_EM_INCREMENT);// inkrementaja adresu i przesuwanie kursora
+ 50a:	86 e0       	ldi	r24, 0x06	; 6
+ 50c:	0e 94 21 02 	call	0x442	; 0x442 <LCD_WriteCommand>
+LCD_WriteCommand(HD44780_DISPLAY_ONOFF | HD44780_DISPLAY_ON | HD44780_CURSOR_OFF | HD44780_CURSOR_NOBLINK); // w³¹cz LCD, bez kursora i mrugania
+ 510:	8c e0       	ldi	r24, 0x0C	; 12
+ 512:	0e 94 21 02 	call	0x442	; 0x442 <LCD_WriteCommand>
+}
+ 516:	cf 91       	pop	r28
+ 518:	08 95       	ret
+
+0000051a <__vector_6>:
+extern uint8_t	IC_OVF_Counter;
+extern uint16_t	Timer_Value_Stop;
+extern bool		IC_Measure_req;
+extern bool		RPM_Compute_req;
+
+ISR(TIMER1_CAPT_vect)	{
+ 51a:	1f 92       	push	r1
+ 51c:	0f 92       	push	r0
+ 51e:	0f b6       	in	r0, 0x3f	; 63
+ 520:	0f 92       	push	r0
+ 522:	11 24       	eor	r1, r1
+ 524:	8f 93       	push	r24
+ 526:	9f 93       	push	r25
+	
+	Timer_Value_Stop	= ICR1;
+ 528:	86 b5       	in	r24, 0x26	; 38
+ 52a:	97 b5       	in	r25, 0x27	; 39
+ 52c:	90 93 6a 00 	sts	0x006A, r25
+ 530:	80 93 69 00 	sts	0x0069, r24
+	IC_Measure_req		= true;
+ 534:	81 e0       	ldi	r24, 0x01	; 1
+ 536:	80 93 6c 00 	sts	0x006C, r24
+}
+ 53a:	9f 91       	pop	r25
+ 53c:	8f 91       	pop	r24
+ 53e:	0f 90       	pop	r0
+ 540:	0f be       	out	0x3f, r0	; 63
+ 542:	0f 90       	pop	r0
+ 544:	1f 90       	pop	r1
+ 546:	18 95       	reti
+
+00000548 <__vector_9>:
+
+ISR(TIMER1_OVF_vect)	{
+ 548:	1f 92       	push	r1
+ 54a:	0f 92       	push	r0
+ 54c:	0f b6       	in	r0, 0x3f	; 63
+ 54e:	0f 92       	push	r0
+ 550:	11 24       	eor	r1, r1
+ 552:	8f 93       	push	r24
+	
+	IC_OVF_Counter++;
+ 554:	80 91 68 00 	lds	r24, 0x0068
+ 558:	8f 5f       	subi	r24, 0xFF	; 255
+ 55a:	80 93 68 00 	sts	0x0068, r24
+	if (5 == IC_OVF_Counter)	{
+ 55e:	85 30       	cpi	r24, 0x05	; 5
+ 560:	29 f4       	brne	.+10     	; 0x56c <__vector_9+0x24>
+		IC_Measure_req	= true;
+ 562:	81 e0       	ldi	r24, 0x01	; 1
+ 564:	80 93 6c 00 	sts	0x006C, r24
+		RPM_Compute_req	= true;
+ 568:	80 93 6b 00 	sts	0x006B, r24
+		}
+}
+ 56c:	8f 91       	pop	r24
+ 56e:	0f 90       	pop	r0
+ 570:	0f be       	out	0x3f, r0	; 63
+ 572:	0f 90       	pop	r0
+ 574:	1f 90       	pop	r1
+ 576:	18 95       	reti
+
+00000578 <__vector_5>:
+
+ISR(TIMER2_OVF_vect)	{
+ 578:	1f 92       	push	r1
+ 57a:	0f 92       	push	r0
+ 57c:	0f b6       	in	r0, 0x3f	; 63
+ 57e:	0f 92       	push	r0
+ 580:	11 24       	eor	r1, r1
+	
+	LCD_BL_Port	&=	~(1<<LCD_BL);		// LCD backlight LED off
+ 582:	97 98       	cbi	0x12, 7	; 18
+ 584:	0f 90       	pop	r0
+ 586:	0f be       	out	0x3f, r0	; 63
+ 588:	0f 90       	pop	r0
+ 58a:	1f 90       	pop	r1
+ 58c:	18 95       	reti
+
+0000058e <main>:
+
+
+int main(void)
+{
+	
+	LCD_Initalize();
+ 58e:	0e 94 4c 02 	call	0x498	; 0x498 <LCD_Initalize>
+	T_Sensor_Init();
+ 592:	0e 94 49 00 	call	0x92	; 0x92 <T_Sensor_Init>
+	sei();				//Enable Global Interrupt
+ 596:	78 94       	sei
+	
+	LCD_GoTo(0,0);
+ 598:	60 e0       	ldi	r22, 0x00	; 0
+ 59a:	80 e0       	ldi	r24, 0x00	; 0
+ 59c:	0e 94 3a 02 	call	0x474	; 0x474 <LCD_GoTo>
+	LCD_WriteText(" Witaj");
+ 5a0:	80 e6       	ldi	r24, 0x60	; 96
+ 5a2:	90 e0       	ldi	r25, 0x00	; 0
+ 5a4:	0e 94 2b 02 	call	0x456	; 0x456 <LCD_WriteText>
+ 5a8:	2f ef       	ldi	r18, 0xFF	; 255
+ 5aa:	84 e3       	ldi	r24, 0x34	; 52
+ 5ac:	9c e0       	ldi	r25, 0x0C	; 12
+ 5ae:	21 50       	subi	r18, 0x01	; 1
+ 5b0:	80 40       	sbci	r24, 0x00	; 0
+ 5b2:	90 40       	sbci	r25, 0x00	; 0
+ 5b4:	e1 f7       	brne	.-8      	; 0x5ae <main+0x20>
+ 5b6:	00 c0       	rjmp	.+0      	; 0x5b8 <main+0x2a>
+ 5b8:	00 00       	nop
+	_delay_ms(500);
+	LCD_Clear();
+ 5ba:	0e 94 42 02 	call	0x484	; 0x484 <LCD_Clear>
+	LCD_GoTo(0,0);
+ 5be:	60 e0       	ldi	r22, 0x00	; 0
+ 5c0:	80 e0       	ldi	r24, 0x00	; 0
+ 5c2:	0e 94 3a 02 	call	0x474	; 0x474 <LCD_GoTo>
+ 5c6:	ff cf       	rjmp	.-2      	; 0x5c6 <main+0x38>
+
+000005c8 <_exit>:
+ 5c8:	f8 94       	cli
+
+000005ca <__stop_program>:
+ 5ca:	ff cf       	rjmp	.-2      	; 0x5ca <__stop_program>
